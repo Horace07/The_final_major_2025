@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Finals - Simulateur Tactique</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .panel h2 {
+            color: #ff6b35;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(30, 30, 50, 0.9);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .input-group select:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+        }
+
+        .input-group select option {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 10px;
+        }
+
+        .team-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .team-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .team-card h3 {
+            color: #f7931e;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .cash-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            color: #4ade80;
+            margin: 10px 0;
+        }
+
+        .ranking-badge {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .prediction-info {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(255, 107, 53, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #ff6b35;
+            font-size: 0.85rem;
+        }
+
+        .potential-cash {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 5px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .button-danger {
+            background: linear-gradient(45deg, #dc2626, #991b1b);
+        }
+
+        .button-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .vault-status {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .vault-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        .vault-active {
+            border: 2px solid #4ade80;
+        }
+
+        .vault-ready {
+            border: 2px solid #ff6b35;
+            background: rgba(255, 107, 53, 0.1);
+            animation: pulse-orange 2s infinite;
+        }
+
+        .vault-completed {
+            background: rgba(107, 114, 128, 0.3);
+            color: #9ca3af;
+        }
+
+        @keyframes pulse-orange {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 107, 53, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.8); }
+        }
+
+        .ready-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff6b35;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+            60% { transform: translateY(-4px); }
+        }
+
+        /* Panneau de prédictions */
+        .predictions-panel {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .predictions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .prediction-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ff6b35;
+        }
+
+        .prediction-title {
+            color: #ff6b35;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .prediction-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #4ade80;
+            margin-bottom: 5px;
+        }
+
+        .prediction-desc {
+            color: #ccc;
+            font-size: 0.85rem;
+        }
+
+        .action-log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .log-kill { color: #ef4444; }
+        .log-vault { color: #3b82f6; }
+        .log-deposit { color: #10b981; }
+        .log-wipe { color: #f59e0b; }
+
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            padding: 30px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        .timeline-horizontal {
+            display: flex;
+            position: relative;
+            min-width: 800px;
+            height: 400px;
+            padding: 20px 0;
+        }
+
+        .timeline-axis {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .timeline-tracks {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            justify-content: space-around;
+            padding: 20px 0;
+        }
+
+        .team-track {
+            position: relative;
+            height: 60px;
+            margin: 10px 0;
+        }
+
+        .team-label {
+            position: absolute;
+            left: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .team-a { color: #ff6b6b; border: 2px solid #ff6b6b; }
+        .team-b { color: #4ecdc4; border: 2px solid #4ecdc4; }
+        .team-c { color: #45b7d1; border: 2px solid #45b7d1; }
+        .team-d { color: #f9ca24; border: 2px solid #f9ca24; }
+
+        .team-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 2px;
+            opacity: 0.3;
+        }
+
+        .team-line.team-a { background: #ff6b6b; }
+        .team-line.team-b { background: #4ecdc4; }
+        .team-line.team-c { background: #45b7d1; }
+        .team-line.team-d { background: #f9ca24; }
+
+        .action-point {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid;
+            background: rgba(0, 0, 0, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .action-point:hover {
+            transform: translateY(-50%) scale(1.5);
+            z-index: 20;
+        }
+
+        .action-point.kill { border-color: #ef4444; background: #ef4444; }
+        .action-point.vault { border-color: #3b82f6; background: #3b82f6; }
+        .action-point.deposit { border-color: #10b981; background: #10b981; }
+        .action-point.wipe { border-color: #f59e0b; background: #f59e0b; }
+
+        .action-tooltip {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 30;
+        }
+
+        .action-point:hover .action-tooltip {
+            opacity: 1;
+        }
+
+        .timeline-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .timeline-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cash-progression {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .cash-bars {
+            display: flex;
+            align-items: end;
+            height: 100px;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .cash-bar {
+            flex: 1;
+            border-radius: 3px 3px 0 0;
+            min-height: 5px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .cash-bar:hover {
+            opacity: 0.8;
+        }
+
+        .cash-bar.team-a { background: #ff6b6b; }
+        .cash-bar.team-b { background: #4ecdc4; }
+        .cash-bar.team-c { background: #45b7d1; }
+        .cash-bar.team-d { background: #f9ca24; }
+
+        .timeline-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .team-section {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .predictions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>THE FINALS - Simulateur Tactique</h1>
+            <p>Planifiez vos stratégies et prédisez les résultats</p>
+        </div>
+
+        <!-- Panneau de prédictions -->
+        <div class="predictions-panel">
+            <h2>🔮 Prédictions Tactiques</h2>
+            <div class="predictions-grid" id="predictionsGrid">
+                <!-- Généré dynamiquement -->
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Panneau de contrôle -->
+            <div class="panel">
+                <h2>🎮 Actions & Contrôles</h2>
+                
+                <div class="input-group">
+                    <label>Équipe active :</label>
+                    <select id="activeTeam">
+                        <option value="0">Équipe A</option>
+                        <option value="1">Équipe B</option>
+                        <option value="2">Équipe C</option>
+                        <option value="3">Équipe D</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Actions coffres :</label>
+                    <button class="button button-small" onclick="openVault()">1️⃣ Ouvrir Coffre (+1000$)</button>
+                    <button class="button button-small" onclick="depositCashBox()">2️⃣ Déposer Caisse dans DAB</button>
+                    <button class="button button-small" onclick="completeCashout()">3️⃣ Finaliser Cashout</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Actions combat :</label>
+                    <button class="button button-small" onclick="addKill()">+1 Kill (+500$)</button>
+                    <button class="button button-small" onclick="stealCashout()">Voler Station (+1000$)</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Team Wipe :</label>
+                    <button class="button button-danger" onclick="teamWipe()">Wipe Équipe Active</button>
+                </div>
+
+                <div class="input-group">
+                    <button class="button button-danger" onclick="resetGame()">🔄 Reset</button>
+                </div>
+            </div>
+
+            <!-- État du jeu -->
+            <div class="panel">
+                <h2>📊 État du Jeu</h2>
+                
+                <div class="vault-status" id="vaultStatus">
+                    <!-- Généré dynamiquement -->
+                </div>
+
+                <div class="team-section" id="teamStats">
+                    <!-- Généré dynamiquement -->
+                </div>
+
+                <div class="input-group">
+                    <label>Prochains coffres disponibles :</label>
+                    <div id="availableVaults" style="padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; font-weight: bold;">
+                        <!-- Généré dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log des actions -->
+        <div class="panel">
+            <h2>📝 Journal des Actions</h2>
+            <div class="action-log" id="actionLog"></div>
+            <button class="button" onclick="generateTimeline()" style="margin-top: 15px;">📊 Générer Timeline Visuelle</button>
+        </div>
+
+        <!-- Timeline visuelle -->
+        <div class="panel" id="timelinePanel" style="display: none;">
+            <h2>⏱️ Timeline de la Partie</h2>
+            <div id="timeline"></div>
+        </div>
+    </div>
+
+    <script>
+        // État du jeu
+        var gameState = {
+            teams: [
+                { name: "Équipe A", cash: 0, kills: 0 },
+                { name: "Équipe B", cash: 0, kills: 0 },
+                { name: "Équipe C", cash: 0, kills: 0 },
+                { name: "Équipe D", cash: 0, kills: 0 }
+            ],
+            vaults: [
+                { id: 1, value: 10000, status: 'available' },
+                { id: 2, value: 10000, status: 'available' },
+                { id: 3, value: 15000, status: 'pending' },
+                { id: 4, value: 15000, status: 'pending' },
+                { id: 5, value: 22000, status: 'pending' },
+                { id: 6, value: 22000, status: 'pending' }
+            ],
+            depositsCompleted: 0,
+            actionHistory: []
+        };
+
+        // Règles du jeu
+        var RULES = {
+            killReward: 500,
+            vaultOpenReward: 1000,
+            stealReward: 1000,
+            depositRewards: [2000, 2000, 3000, 3000, 4000, 4000],
+            wipeRankedPenalty: 0.15, // 15% en mode Ranked
+            wipeWorldTourPenalty: 0.15 // 15% en mode World Tour aussi
+        };
+
+        // Calcul des prédictions
+        function calculatePredictions() {
+            var teams = gameState.teams.slice();
+            var rankings = teams.map((team, index) => ({ ...team, originalIndex: index }))
+                .sort((a, b) => b.cash - a.cash);
+            
+            var remainingPotential = 0;
+            var readyVaults = [];
+            
+            // Calculer le potentiel restant
+            gameState.vaults.forEach(vault => {
+                if (vault.status === 'available' || vault.status === 'pending') {
+                    remainingPotential += vault.value + RULES.depositRewards[vault.id - 1] + RULES.vaultOpenReward;
+                }
+                if (vault.status === 'deposited') {
+                    readyVaults.push(vault);
+                }
+            });
+
+            var leader = rankings[0];
+            var secondPlace = rankings[1];
+            var totalCash = teams.reduce((sum, team) => sum + team.cash, 0);
+            
+            return {
+                leader: {
+                    title: "Équipe en Tête",
+                    value: leader.name,
+                    desc: leader.cash > 0 ? leader.cash.toLocaleString() + "$ d'avance" : "Match serré"
+                },
+                potentialGain: {
+                    title: "Potentiel Restant",
+                    value: remainingPotential.toLocaleString() + "$",
+                    desc: "Cash total encore disponible"
+                },
+                nextCashout: {
+                    title: "Prochain Cashout",
+                    value: readyVaults.length > 0 ? readyVaults[0].value.toLocaleString() + "$" : "Aucun",
+                    desc: readyVaults.length > 0 ? "Coffre " + readyVaults[0].id + " prêt!" : "Déposez une caisse d'abord"
+                },
+                competitiveness: {
+                    title: "Niveau de Compétition",
+                    value: Math.abs(leader.cash - secondPlace.cash) < 3000 ? "Intense" : "Dominée",
+                    desc: "Écart: " + Math.abs(leader.cash - secondPlace.cash).toLocaleString() + "$"
+                }
+            };
+        }
+
+        // Mise à jour des prédictions
+        function updatePredictions() {
+            var predictions = calculatePredictions();
+            var container = document.getElementById('predictionsGrid');
+            var html = '';
+            
+            Object.keys(predictions).forEach(key => {
+                var pred = predictions[key];
+                html += '<div class="prediction-card">';
+                html += '<div class="prediction-title">' + pred.title + '</div>';
+                html += '<div class="prediction-value">' + pred.value + '</div>';
+                html += '<div class="prediction-desc">' + pred.desc + '</div>';
+                html += '</div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Calcul du potentiel de chaque équipe
+        function calculateTeamPotential(teamIndex) {
+            var currentCash = gameState.teams[teamIndex].cash;
+            var remainingPotential = 0;
+            
+            // Potentiel des coffres restants (si cette équipe les prenait tous)
+            gameState.vaults.forEach(vault => {
+                if (vault.status !== 'completed') {
+                    remainingPotential += vault.value + RULES.depositRewards[vault.id - 1] + RULES.vaultOpenReward;
+                }
+            });
+            
+            return currentCash + remainingPotential;
+        }
+
+        // Calcul du classement prédictif
+        function getPredictiveRanking() {
+            return gameState.teams.map((team, index) => ({
+                ...team,
+                originalIndex: index,
+                potential: calculateTeamPotential(index)
+            })).sort((a, b) => b.cash - a.cash);
+        }
+
+        function updateDisplay() {
+            updateTeamStats();
+            updateVaultStatus();
+            updateAvailableVaults();
+            updatePredictions();
+        }
+
+        function updateTeamStats() {
+            var container = document.getElementById('teamStats');
+            var activeIndex = parseInt(document.getElementById('activeTeam').value);
+            var rankings = getPredictiveRanking();
+            var html = '';
+            
+            rankings.forEach((team, rank) => {
+                var isActive = team.originalIndex === activeIndex ? 'vault-active' : '';
+                var rankPosition = rank + 1;
+                var rankEmoji = ['🥇', '🥈', '🥉', '4️⃣'][rank];
+                
+                html += '<div class="team-card ' + isActive + '">';
+                html += '<div class="ranking-badge">' + rankEmoji + ' #' + rankPosition + '</div>';
+                html += '<h3>' + team.name + '</h3>';
+                html += '<div class="cash-display">' + team.cash.toLocaleString() + '$</div>';
+                html += '<div>Kills: ' + team.kills + '</div>';
+                html += '<div class="prediction-info">';
+                html += '<div>Potentiel Max: <span class="potential-cash">' + team.potential.toLocaleString() + '$</span></div>';
+                if (rank < 3) {
+                    var advantage = team.cash - rankings[rank + 1].cash;
+                    html += '<div>Avance: <span style="color: #4ade80;">+' + advantage.toLocaleString() + '$</span></div>';
+                } else {
+                    var deficit = rankings[0].cash - team.cash;
+                    html += '<div>Retard: <span style="color: #ef4444;">-' + deficit.toLocaleString() + '$</span></div>';
+                }
+                html += '</div>';
+                html += '</div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateVaultStatus() {
+            var container = document.getElementById('vaultStatus');
+            var html = '';
+            
+            for (var i = 0; i < gameState.vaults.length; i++) {
+                var vault = gameState.vaults[i];
+                var cssClass = 'vault-item';
+                var readyIndicator = '';
+                
+                if (vault.status === 'available') {
+                    cssClass += ' vault-active';
+                } else if (vault.status === 'deposited') {
+                    cssClass += ' vault-ready';
+                    readyIndicator = '<div class="ready-indicator">!</div>';
+                } else if (vault.status === 'completed') {
+                    cssClass += ' vault-completed';
+                }
+                
+                html += '<div class="' + cssClass + '">';
+                html += readyIndicator;
+                html += '<strong>Coffre ' + vault.id + '</strong><br>';
+                html += vault.value.toLocaleString() + '$<br>';
+                html += '<small>' + getStatusText(vault.status) + '</small>';
+                
+                // Prédiction pour les coffres prêts
+                if (vault.status === 'deposited') {
+                    html += '<br><small style="color: #ff6b35; font-weight: bold;">🚨 PRÊT POUR CASHOUT!</small>';
+                }
+                
+                html += '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function updateAvailableVaults() {
+            var container = document.getElementById('availableVaults');
+            var availableVaults = [];
+            var readyVaults = [];
+            
+            for (var i = 0; i < gameState.vaults.length; i++) {
+                if (gameState.vaults[i].status === 'available') {
+                    availableVaults.push(gameState.vaults[i]);
+                } else if (gameState.vaults[i].status === 'deposited') {
+                    readyVaults.push(gameState.vaults[i]);
+                }
+            }
+            
+            var html = '';
+            
+            // Afficher les coffres prêts en priorité
+            if (readyVaults.length > 0) {
+                html += '<div style="background: rgba(255, 107, 53, 0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 2px solid #ff6b35;">';
+                html += '<strong style="color: #ff6b35;">🚨 CASHOUT DISPONIBLE:</strong><br>';
+                readyVaults.forEach(vault => {
+                    html += '💰 Coffre ' + vault.id + ' → <strong style="color: #4ade80;">' + vault.value.toLocaleString() + '$</strong><br>';
+                });
+                html += '</div>';
+            }
+            
+            if (availableVaults.length === 0 && readyVaults.length === 0) {
+                html += '🎉 Tous les coffres ont été traités !';
+            } else if (availableVaults.length > 0) {
+                html += '<strong>📦 Coffres disponibles:</strong><br>';
+                for (var i = 0; i < availableVaults.length; i++) {
+                    var vault = availableVaults[i];
+                    var depositReward = RULES.depositRewards[vault.id - 1];
+                    var totalReward = vault.value + depositReward + RULES.vaultOpenReward;
+                    html += '📦 Coffre ' + vault.id + ' → <strong style="color: #4ade80;">Total: ' + totalReward.toLocaleString() + '$</strong>';
+                    html += '<br><small>(Ouverture: +' + RULES.vaultOpenReward + '$ • Dépôt: +' + depositReward.toLocaleString() + '$ • Cashout: +' + vault.value.toLocaleString() + '$)</small>';
+                    if (i < availableVaults.length - 1) html += '<br>';
+                }
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'available': return '✅ Disponible';
+                case 'pending': return '⏳ En attente';
+                case 'opened': return '📦 Ouvert';
+                case 'deposited': return '🚨 PRÊT!';
+                case 'completed': return '💰 Cashout Terminé';
+                default: return status;
+            }
+        }
+
+        function addKill() {
+            var teamIndex = parseInt(document.getElementById('activeTeam').value);
+            
+            // Modifier le cash AVANT de logger
+            gameState.teams[teamIndex].cash += RULES.killReward;
+            gameState.teams[teamIndex].kills++;
+            
+            // Logger APRÈS avoir modifié le cash
+            logAction(gameState.teams[teamIndex].name + ' élimine un ennemi (+' + RULES.killReward + '$)', 'log-kill');
+            updateDisplay();
+        }
+
+        function openVault() {
+            var teamIndex = parseInt(document.getElementById('activeTeam').value);
+            var availableVault = null;
+            
+            for (var i = 0; i < gameState.vaults.length; i++) {
+                if (gameState.vaults[i].status === 'available') {
+                    availableVault = gameState.vaults[i];
+                    break;
+                }
+            }
+            
+            if (!availableVault) {
+                alert('Aucun coffre disponible à ouvrir !');
+                return;
+            }
+            
+            // Modifier le cash AVANT de logger
+            gameState.teams[teamIndex].cash += RULES.vaultOpenReward;
+            availableVault.status = 'opened';
+            
+            // Logger APRÈS avoir modifié le cash
+            logAction(gameState.teams[teamIndex].name + ' ouvre le coffre ' + availableVault.id + ' (+' + RULES.vaultOpenReward + '$)', 'log-vault');
+            updateDisplay();
+        }
+
+        function depositCashBox() {
+            var teamIndex = parseInt(document.getElementById('activeTeam').value);
+            var openedVault = null;
+            
+            for (var i = 0; i < gameState.vaults.length; i++) {
+                if (gameState.vaults[i].status === 'opened') {
+                    openedVault = gameState.vaults[i];
+                    break;
+                }
+            }
+            
+            if (!openedVault) {
+                alert('Aucun coffre ouvert à déposer ! Ouvrez d\'abord un coffre.');
+                return;
+            }
+            
+            var depositReward = RULES.depositRewards[openedVault.id - 1];
+            
+            // Modifier le cash AVANT de logger
+            gameState.teams[teamIndex].cash += depositReward;
+            openedVault.status = 'deposited';
+            
+            // Logger APRÈS avoir modifié le cash
+            logAction(gameState.teams[teamIndex].name + ' dépose la caisse du coffre ' + openedVault.id + ' dans le DAB (+' + depositReward.toLocaleString() + '$)', 'log-deposit');
+            updateDisplay();
+        }
+
+        function completeCashout() {
+            var teamIndex = parseInt(document.getElementById('activeTeam').value);
+            var depositedVault = null;
+            
+            for (var i = 0; i < gameState.vaults.length; i++) {
+                if (gameState.vaults[i].status === 'deposited') {
+                    depositedVault = gameState.vaults[i];
+                    break;
+                }
+            }
+            
+            if (!depositedVault) {
+                alert('Aucune caisse en cours de cashout ! Déposez d\'abord une caisse.');
+                return;
+            }
+            
+            // IMPORTANT: Modifier le cash AVANT de logger l'action
+            gameState.teams[teamIndex].cash += depositedVault.value;
+            depositedVault.status = 'completed';
+            gameState.depositsCompleted++;
+            
+            activateNextVaults();
+            
+            // Logger APRÈS avoir modifié le cash
+            logAction(gameState.teams[teamIndex].name + ' finalise le cashout du coffre ' + depositedVault.id + ' (+' + depositedVault.value.toLocaleString() + '$) 🎉', 'log-deposit');
+            updateDisplay();
+        }
+
+        function stealCashout() {
+            var teamIndex = parseInt(document.getElementById('activeTeam').value);
+            
+            // Modifier le cash AVANT de logger
+            gameState.teams[teamIndex].cash += RULES.stealReward;
+            
+            // Logger APRÈS avoir modifié le cash
+            logAction(gameState.teams[teamIndex].name + ' vole une station de cashout (+' + RULES.stealReward + '$)', 'log-deposit');
+            updateDisplay();
+        }
+
+        function activateNextVaults() {
+            var pendingVaults = [];
+            var availableVaults = [];
+            
+            for (var i = 0; i < gameState.vaults.length; i++) {
+                if (gameState.vaults[i].status === 'pending') {
+                    pendingVaults.push(gameState.vaults[i]);
+                }
+                if (gameState.vaults[i].status === 'available') {
+                    availableVaults.push(gameState.vaults[i]);
+                }
+            }
+            
+            if (availableVaults.length < 2 && pendingVaults.length > 0) {
+                var toActivate = Math.min(2 - availableVaults.length, pendingVaults.length);
+                for (var i = 0; i < toActivate; i++) {
+                    pendingVaults[i].status = 'available';
+                }
+            }
+        }
+
+        function teamWipe() {
+            var teamIndex = parseInt(document.getElementById('activeTeam').value);
+            var team = gameState.teams[teamIndex];
+            
+            if (team.cash === 0) {
+                alert('Cette équipe n\'a pas de cash à perdre !');
+                return;
+            }
+            
+            // Les deux modes ont maintenant 15% de pénalité
+            var mode = confirm('Mode Ranked (OK) ou World Tour (Annuler) ?\nLes deux modes appliquent une pénalité de 15%');
+            var penalty = mode ? RULES.wipeRankedPenalty : RULES.wipeWorldTourPenalty;
+            var modeText = mode ? 'Ranked' : 'World Tour';
+            
+            var lostCash = Math.floor(team.cash * penalty);
+            var cashBefore = team.cash;
+            team.cash -= lostCash;
+            
+            // Log plus détaillé
+            logAction(team.name + ' subit un team wipe en mode ' + modeText + ' (Cash: ' + cashBefore.toLocaleString() + '$ → ' + team.cash.toLocaleString() + '$, -' + lostCash.toLocaleString() + '$, -15%)', 'log-wipe');
+            updateDisplay();
+        }
+
+        function logAction(action, className) {
+            var log = document.getElementById('actionLog');
+            var entry = document.createElement('div');
+            entry.className = 'log-entry ' + (className || '');
+            var timestamp = new Date().toLocaleTimeString();
+            entry.textContent = '[' + timestamp + '] ' + action;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            
+            // Ajouter à l'historique pour la timeline
+            gameState.actionHistory.push({
+                time: timestamp,
+                action: action,
+                type: className || 'info',
+                teamIndex: parseInt(document.getElementById('activeTeam').value)
+            });
+        }
+
+        function resetGame() {
+            gameState = {
+                teams: [
+                    { name: "Équipe A", cash: 0, kills: 0 },
+                    { name: "Équipe B", cash: 0, kills: 0 },
+                    { name: "Équipe C", cash: 0, kills: 0 },
+                    { name: "Équipe D", cash: 0, kills: 0 }
+                ],
+                vaults: [
+                    { id: 1, value: 10000, status: 'available' },
+                    { id: 2, value: 10000, status: 'available' },
+                    { id: 3, value: 15000, status: 'pending' },
+                    { id: 4, value: 15000, status: 'pending' },
+                    { id: 5, value: 22000, status: 'pending' },
+                    { id: 6, value: 22000, status: 'pending' }
+                ],
+                depositsCompleted: 0,
+                actionHistory: []
+            };
+            
+            document.getElementById('actionLog').innerHTML = '';
+            document.getElementById('timelinePanel').style.display = 'none';
+            updateDisplay();
+            logAction('🔄 Jeu réinitialisé', 'log-vault');
+        }
+
+        function generateTimeline() {
+            if (gameState.actionHistory.length === 0) {
+                alert('Aucune action à afficher ! Jouez d\'abord quelques actions.');
+                return;
+            }
+            
+            var timelinePanel = document.getElementById('timelinePanel');
+            var timelineContainer = document.getElementById('timeline');
+            
+            // Statistiques générales
+            var stats = calculateStats();
+            var statsHtml = '<div class="timeline-stats">';
+            statsHtml += '<div class="stat-card"><div class="stat-number">' + stats.totalActions + '</div><div class="stat-label">Actions Total</div></div>';
+            statsHtml += '<div class="stat-card"><div class="stat-number">' + stats.totalKills + '</div><div class="stat-label">Kills Total</div></div>';
+            statsHtml += '<div class="stat-card"><div class="stat-number">' + stats.totalCash.toLocaleString() + '$</div><div class="stat-label">Cash Total</div></div>';
+            statsHtml += '<div class="stat-card"><div class="stat-number">' + stats.coffresCashout + '/6</div><div class="stat-label">Coffres Terminés</div></div>';
+            statsHtml += '</div>';
+            
+            // Timeline chronologique améliorée
+            var timelineHtml = '<div class="timeline">';
+            timelineHtml += '<div class="timeline-controls">';
+            timelineHtml += '<h3 style="color: #ff6b35; margin: 0;">📈 Timeline Chronologique des Actions</h3>';
+            timelineHtml += '</div>';
+            
+            // Recalculer les soldes à chaque étape
+            var cashProgression = calculateCashProgression();
+            
+            timelineHtml += '<div style="display: flex; flex-direction: column; gap: 15px; padding: 20px 0; min-width: 800px; overflow-x: auto;">';
+            
+            // Générer chaque action avec les infos détaillées
+            for (var i = 0; i < gameState.actionHistory.length; i++) {
+                var action = gameState.actionHistory[i];
+                var teamIndex = action.teamIndex;
+                var teamName = gameState.teams[teamIndex].name;
+                var teamColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24'];
+                var teamColor = teamColors[teamIndex];
+                
+                // Extraire le montant de l'action
+                var actionAmount = extractActionAmount(action.action);
+                var totalCashAfter = cashProgression[i].teamCash[teamIndex];
+                
+                timelineHtml += '<div style="display: flex; align-items: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; border-left: 4px solid ' + teamColor + ';">';
+                
+                // Temps
+                timelineHtml += '<div style="min-width: 80px; color: #ccc; font-size: 0.9rem;">' + action.time + '</div>';
+                
+                // Point d\'action coloré
+                var actionType = action.type.replace('log-', '');
+                var pointColor = getActionPointColor(actionType);
+                timelineHtml += '<div style="width: 20px; height: 20px; border-radius: 50%; background: ' + pointColor + '; margin: 0 15px; box-shadow: 0 0 10px ' + pointColor + ';"></div>';
+                
+                // Équipe
+                timelineHtml += '<div style="min-width: 100px; font-weight: bold; color: ' + teamColor + ';">' + teamName + '</div>';
+                
+                // Action
+                timelineHtml += '<div style="flex: 1; margin: 0 15px;">' + action.action + '</div>';
+                
+                // Cash total après action
+                timelineHtml += '<div style="text-align: center; min-width: 140px;">';
+                timelineHtml += '<div style="font-size: 1.3rem; font-weight: bold; color: #4ade80; margin-bottom: 5px;">Total: ' + totalCashAfter.toLocaleString() + '$</div>';
+                
+                // Détail de l'action (gain/perte de cette action)
+                if (actionAmount !== 0) {
+                    var sign = actionAmount > 0 ? '+' : '';
+                    var amountColor = actionAmount > 0 ? '#4ade80' : '#ef4444';
+                    timelineHtml += '<div style="font-size: 0.9rem; color: ' + amountColor + '; font-weight: bold;">(' + sign + actionAmount.toLocaleString() + '$)</div>';
+                }
+                
+                timelineHtml += '</div>';
+                timelineHtml += '</div>';
+            }
+            
+            timelineHtml += '</div>';
+            
+            // Légende
+            timelineHtml += '<div class="timeline-legend">';
+            timelineHtml += '<div class="legend-item"><div class="legend-dot" style="background: #ef4444;"></div>Kills</div>';
+            timelineHtml += '<div class="legend-item"><div class="legend-dot" style="background: #3b82f6;"></div>Coffres</div>';
+            timelineHtml += '<div class="legend-item"><div class="legend-dot" style="background: #10b981;"></div>Dépôts/Cashouts</div>';
+            timelineHtml += '<div class="legend-item"><div class="legend-dot" style="background: #f59e0b;"></div>Team Wipes</div>';
+            timelineHtml += '</div>';
+            
+            timelineHtml += '</div>';
+            
+            // Progression du cash
+            var cashHtml = '<div class="cash-progression">';
+            cashHtml += '<h4 style="color: #ff6b35; margin-bottom: 10px;">💰 Progression du Cash Final</h4>';
+            cashHtml += '<div class="cash-bars">';
+            
+            var teamColors = ['team-a', 'team-b', 'team-c', 'team-d'];
+            var teamNames = ['Équipe A', 'Équipe B', 'Équipe C', 'Équipe D'];
+            var maxCash = Math.max.apply(Math, gameState.teams.map(function(team) { return team.cash; }));
+            if (maxCash === 0) maxCash = 1; // Éviter division par 0
+            
+            for (var i = 0; i < gameState.teams.length; i++) {
+                var height = (gameState.teams[i].cash / maxCash) * 100;
+                cashHtml += '<div class="cash-bar ' + teamColors[i] + '" style="height: ' + height + '%;" title="' + teamNames[i] + ': ' + gameState.teams[i].cash.toLocaleString() + '$"></div>';
+            }
+            
+            cashHtml += '</div></div>';
+            
+            timelineContainer.innerHTML = statsHtml + timelineHtml + cashHtml;
+            timelinePanel.style.display = 'block';
+            
+            // Scroll vers la timeline
+            timelinePanel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getActionPointColor(actionType) {
+            switch(actionType) {
+                case 'kill': return '#ef4444';
+                case 'vault': return '#3b82f6';
+                case 'deposit': return '#10b981';
+                case 'wipe': return '#f59e0b';
+                default: return '#ccc';
+            }
+        }
+
+        function extractActionAmount(actionText) {
+            // Extraire le montant de l'action (+ ou -)
+            // Recherche des patterns : (+1000$), (+2,000$), (-500$), etc.
+            var match = actionText.match(/\(([+-]?)(\d{1,3}(?:[\s,]?\d{3})*)\$/);
+            
+            if (match) {
+                var sign = match[1] === '-' ? -1 : 1;
+                var amount = match[2].replace(/[\s,]/g, ''); // Enlever espaces et virgules
+                return parseInt(amount) * sign;
+            }
+            
+            // Si pas trouvé, chercher d'autres patterns
+            // Pattern pour : +10 000$ ou +2 000$
+            var match2 = actionText.match(/\(([+-]?)(\d+(?:\s\d+)*)\$/);
+            if (match2) {
+                var sign = match2[1] === '-' ? -1 : 1;
+                var amount = match2[2].replace(/\s/g, ''); // Enlever les espaces
+                return parseInt(amount) * sign;
+            }
+            
+            return 0;
+        }
+
+        function calculateCashProgression() {
+            // Recalculer l'état du cash à chaque étape pour la timeline
+            var progression = [];
+            var tempTeams = [
+                { cash: 0 }, { cash: 0 }, { cash: 0 }, { cash: 0 }
+            ];
+            
+            for (var i = 0; i < gameState.actionHistory.length; i++) {
+                var action = gameState.actionHistory[i];
+                var amount = extractActionAmount(action.action);
+                tempTeams[action.teamIndex].cash += amount;
+                
+                progression.push({
+                    teamCash: tempTeams.map(team => team.cash)
+                });
+            }
+            
+            return progression;
+        }
+        
+        function getTeamActions(teamIndex) {
+            var teamActions = [];
+            for (var i = 0; i < gameState.actionHistory.length; i++) {
+                var action = gameState.actionHistory[i];
+                if (action.teamIndex === teamIndex) {
+                    teamActions.push({
+                        index: i,
+                        time: action.time,
+                        action: action.action,
+                        type: action.type
+                    });
+                }
+            }
+            return teamActions;
+        }
+        
+        function calculateStats() {
+            var totalKills = 0;
+            var totalCash = 0;
+            var coffresCashout = 0;
+            
+            for (var i = 0; i < gameState.teams.length; i++) {
+                totalKills += gameState.teams[i].kills;
+                totalCash += gameState.teams[i].cash;
+            }
+            
+            for (var i = 0; i < gameState.vaults.length; i++) {
+                if (gameState.vaults[i].status === 'completed') {
+                    coffresCashout++;
+                }
+            }
+            
+            return {
+                totalActions: gameState.actionHistory.length,
+                totalKills: totalKills,
+                totalCash: totalCash,
+                coffresCashout: coffresCashout
+            };
+        }
+        
+        function getActionIcon(type) {
+            switch(type) {
+                case 'log-kill': return '🎯';
+                case 'log-vault': return '📦';
+                case 'log-deposit': return '💰';
+                case 'log-wipe': return '💀';
+                default: return '⚡';
+            }
+        }
+
+        // Initialisation
+        updateDisplay();
+        logAction('🎮 Simulateur The Finals initialisé', 'log-vault');
+    </script>
+</body>
+</html>
